@@ -2,7 +2,6 @@
 
 
 unwanted_characters_pattern='[\/<>:"|?*\.]'
-#unwanted_emoji_pattern='[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]'
 
 rename_files_in_folder(){
     local folder=$1
@@ -11,17 +10,25 @@ rename_files_in_folder(){
         dir_name=$(dirname "$file")
         base_name=$(basename "$file")
 
-        echo -e "$base_name\n"
+        echo -e "Before\n$base_name\n"
 
         new_base_name=$(echo "$base_name" | sed "s/$unwanted_characters_pattern//g")
+        
+        new_base_name=$(node -e "
+            const unwanted_emoji_pattern = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+
+            const filename = '$base_name';
+
+            const result = filename.replace(unwanted_emoji_pattern, '');
+            console.log(result)
+        ")
 
         if [ "$base_name" != "$new_base_name" ]; then
             mv "$file" "$dir_name/$new_base_name"
-            echo -e "Renamed\n$new_base_name"
+            echo -e "Renamed file\n$new_base_name"
         else
-            echo -e "Original kept\n$base_name\n"
+            echo -e "Original file name kept\n$base_name\n"
         fi
-
     done
 }
 
